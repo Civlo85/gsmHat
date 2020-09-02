@@ -18,12 +18,12 @@ To download scrapeasy, either fork this github repo or simply use Pypi via pip.
 $ pip3 install gsmHat
 ```
 
-### Using it
+### Prepare
 
-1. Install your sim card in your module, connect the GSM antenna and mount the module on the pin headers of your Raspberry Pi
-   Make sure, that you **do not** need to enter Pin Code to use your card
+* Install your sim card in your module, connect the GSM antenna and mount the module on the pin headers of your Raspberry Pi
+  Make sure, that you **do not** need to enter Pin Code to use your card
 
-2. Enable the Uart Interface in your Raspberry Pi
+* Enable the Uart Interface in your Raspberry Pi
 
     1. Start raspi-config: `sudo raspi-config`.
     2. Select option 5 - interfacing options.
@@ -32,19 +32,21 @@ $ pip3 install gsmHat
     5. At the prompt `Would you like the serial port hardware to be enabled?` answer 'Yes'
     6. Exit raspi-config and reboot the Pi for changes to take effect.
 
-3. Import gsmHat to your project
+### Using it
+
+1. Import gsmHat to your project
 
 ```Python
 from gsmHat import GSMHat, SMS
 ```
 
-4. Init gsmHat
+2. Init gsmHat
 
 ```Python
 gsm = GSMHat('/dev/ttyS0', 115200)
 ```
 
-5. Check, if new SMS are available in your main loop
+3. Check, if new SMS are available in your main loop
 
 ```Python
 # Check, if new SMS is available
@@ -54,7 +56,7 @@ if gsm.SMS_available() > 0:
     # Do something with it
 ```
 
-6. Do something with your newly received SMS
+4. Do something with your newly received SMS
 
 ```Python
 # Get new SMS
@@ -65,7 +67,7 @@ print('It was received at %s' % newSMS.Date)
 print('The message is: %s' % newSMS.Message)
 ```
 
-7. You can also write SMS
+5. You can also write SMS
 
 ```Python
 Number = '+491601234567'
