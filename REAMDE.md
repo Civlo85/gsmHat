@@ -1,4 +1,4 @@
-# gsmHat - A non-blocking software to use the Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi with Python
+# gsmHat - Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi with Python
 
 With gsmHat, you can easily use the functionality of the Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi ([Link to HAT](https://www.waveshare.com/gsm-gprs-gnss-hat.htm)). On this module a SIM868 Controller is doing the job too connect your Raspberry Pi with the world just by using a sim card.
 
@@ -18,33 +18,35 @@ To download scrapeasy, either fork this github repo or simply use Pypi via pip.
 $ pip3 install gsmHat
 ```
 
+### Prepare
+
+* Install your sim card in your module, connect the GSM antenna and mount the module on the pin headers of your Raspberry Pi
+  Make sure, that you **do not** need to enter Pin Code to use your card
+
+* Enable the Uart Interface in your Raspberry Pi
+
+    1. Start raspi-config: `sudo raspi-config`.
+    2. Select option 5 - interfacing options.
+    3. Select option P6 - serial.
+    4. At the prompt `Would you like a login shell to be accessible over serial?` answer 'No'
+    5. At the prompt `Would you like the serial port hardware to be enabled?` answer 'Yes'
+    6. Exit raspi-config and reboot the Pi for changes to take effect.
+
 ### Using it
 
-1. Install your sim card in your module, connect the GSM antenna and mount the module on the pin headers of your Raspberry Pi
-   Make sure, that you **do not** need to enter Pin Code to use your card
-
-2. Enable the Uart Interface in your Raspberry Pi
-
-1. Start raspi-config: `sudo raspi-config`.
-2. Select option 5 - interfacing options.
-3. Select option P6 - serial.
-4. At the prompt `Would you like a login shell to be accessible over serial?` answer 'No'
-5. At the prompt `Would you like the serial port hardware to be enabled?` answer 'Yes'
-6. Exit raspi-config and reboot the Pi for changes to take effect.
-
-3. Import gsmHat to your project
+1. Import gsmHat to your project
 
 ```Python
 from gsmHat import GSMHat, SMS
 ```
 
-4. Init gsmHat
+2. Init gsmHat
 
 ```Python
 gsm = GSMHat('/dev/ttyS0', 115200)
 ```
 
-5. Check, if new SMS are available in your main loop
+3. Check, if new SMS are available in your main loop
 
 ```Python
 # Check, if new SMS is available
@@ -54,7 +56,7 @@ if gsm.SMS_available() > 0:
     # Do something with it
 ```
 
-6. Do something with your newly received SMS
+4. Do something with your newly received SMS
 
 ```Python
 # Get new SMS
@@ -65,7 +67,7 @@ print('It was received at %s' % newSMS.Date)
 print('The message is: %s' % newSMS.Message)
 ```
 
-7. You can also write SMS
+5. You can also write SMS
 
 ```Python
 Number = '+491601234567'
@@ -74,13 +76,19 @@ Message = 'Hello mobile world'
 # Send SMS
 gsm.SMS_write(Number, Message)
 ```
-## On which platform was gsmHat built and tested?
+## What will come in the future?
 
-# Hardware:
+* Outgoing and Incoming Calls
+* GPS functionality
+* More options to configure the module (e.g. using sim cards with pin code)
+
+## On which platform was gsmHat developed and tested?
+
+### Hardware:
 * [Raspberry Pi 4, Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)
 * [GSM/GPRS/GNSS/Bluetooth HAT for Raspberry Pi](https://www.waveshare.com/gsm-gprs-gnss-hat.htm), **later version that allows to power on/off the module by controlling GPIO 4**
 
-# Software:
+### Software:
 * Raspbian (Codename: buster, Release: 10)
 * Kernel: Linux 5.4.51-v7l+
 * Python: 3.7.3
