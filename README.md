@@ -25,12 +25,12 @@ $ pip3 install gsmHat
 
 2. Enable the Uart Interface in your Raspberry Pi
 
-  1. Start raspi-config: `sudo raspi-config`.
-  2. Select option 5 - interfacing options.
-  3. Select option P6 - serial.
-  4. At the prompt `Would you like a login shell to be accessible over serial?` answer 'No'
-  5. At the prompt `Would you like the serial port hardware to be enabled?` answer 'Yes'
-  6. Exit raspi-config and reboot the Pi for changes to take effect.
+    1. Start raspi-config: `sudo raspi-config`.
+    2. Select option 5 - interfacing options.
+    3. Select option P6 - serial.
+    4. At the prompt `Would you like a login shell to be accessible over serial?` answer 'No'
+    5. At the prompt `Would you like the serial port hardware to be enabled?` answer 'Yes'
+    6. Exit raspi-config and reboot the Pi for changes to take effect.
 
 3. Import gsmHat to your project
 
