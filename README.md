@@ -6,6 +6,8 @@ With gsmHat, you can easily use the functionality of the Waveshare GSM/GPRS/GNSS
 gsmHat was written for Python 3. It provides the following features
 
   - Non-blocking receiving and sending SMS in background
+  - Non-blocking calling
+  - Non-blocking refreshing of actual gps position
 
 ## Usage
 
@@ -13,15 +15,14 @@ In the following paragraphs, I am going to describe how you can get and use gsmH
 
 ###  Getting it
 
-To download scrapeasy, either fork this github repo or simply use Pypi via pip.
+To download gsmHat, either fork this github repo or simply use Pypi via pip.
 ```sh
 $ pip3 install gsmHat
 ```
 
 ### Prepare
 
-* Install your sim card in your module, connect the GSM antenna and mount the module on the pin headers of your Raspberry Pi
-  Make sure, that you **do not** need to enter Pin Code to use your card
+* Install your sim card in your module, connect the GSM and the GPS antennas and mount the module on the pin headers of your Raspberry Pi. Make sure, that you **do not** need to enter Pin Code to use your card. Pin Codes are not supported yet.
 
 * Enable the Uart Interface in your Raspberry Pi
 
@@ -37,7 +38,7 @@ $ pip3 install gsmHat
 1. Import gsmHat to your project
 
 ```Python
-from gsmHat import GSMHat, SMS
+from gsmHat import GSMHat, SMS, GPS
 ```
 
 2. Init gsmHat
@@ -76,10 +77,42 @@ Message = 'Hello mobile world'
 # Send SMS
 gsm.SMS_write(Number, Message)
 ```
+
+6. Or you can call a number
+
+```Python
+Number = '+491601234567'
+gsm.Call(Number)        # This call hangs up automatically after 15 seconds
+time.sleep(10)          # Wait 10 seconds ...
+gsm.HangUp()            # Or you can HangUp by yourself earlier
+gsm.Call(Number, 60)    # Or lets change the timeout to 60 seconds. This call hangs up automatically after 60 seconds
+```
+
+7. Lets see, where your Raspberry Pi (in a car or in a motocycle or on a cat?) is positioned on earth
+
+```Python
+# Get actual GPS position
+GPSObj = gsm.GetActualGPS()
+
+# Lets print some values
+print('GNSS_status: %s' % str(GPSObj.GNSS_status))
+print('Fix_status: %s' % str(GPSObj.Fix_status))
+print('UTC: %s' % str(GPSObj.UTC))
+print('Latitude: %s' % str(GPSObj.Latitude))
+print('Longitude: %s' % str(GPSObj.Longitude))
+print('Altitude: %s' % str(GPSObj.Altitude))
+print('Speed: %s' % str(GPSObj.Speed))
+print('Course: %s' % str(GPSObj.Course))
+print('HDOP: %s' % str(GPSObj.HDOP))
+print('PDOP: %s' % str(GPSObj.PDOP))
+print('VDOP: %s' % str(GPSObj.VDOP))
+print('GPS_satellites: %s' % str(GPSObj.GPS_satellites))
+print('GNSS_satellites: %s' % str(GPSObj.GNSS_satellites))
+print('Signal: %s' % str(GPSObj.Signal))
+```
+
 ## What will come in the future?
 
-* Outgoing and Incoming Calls
-* GPS functionality
 * More options to configure the module (e.g. using sim cards with pin code)
 
 ## On which platform was gsmHat developed and tested?
