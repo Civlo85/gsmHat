@@ -111,6 +111,21 @@ print('GNSS_satellites: %s' % str(GPSObj.GNSS_satellites))
 print('Signal: %s' % str(GPSObj.Signal))
 ```
 
+8. Calculate the distance between two Points on earth
+
+```Python
+    GPSObj1 = GPS()                 # You can also use gsm.GetActualGPS() to get an GPS object
+    GPSObj1.Latitude = 52.266949    # Location of Braunschweig, Germany
+    GPSObj1.Longitude = 10.524822
+
+    GPSObj2 = GPS()
+    GPSObj2.Latitude = 36.720005    # Location of Manavgat, Turkey
+    GPSObj2.Longitude = 31.546094
+
+    print('Distance from Braunschweig to Manavgat is [m]:')
+    print(GPS.CalculateDeltaP(GPSObj1, GPSObj2))        # this will print 2384660.7 metres
+```
+
 ## What will come in the future?
 
 * More options to configure the module (e.g. using sim cards with pin code)
