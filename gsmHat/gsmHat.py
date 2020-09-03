@@ -4,6 +4,7 @@ import logging
 import serial
 import threading
 import time
+import math
 import re
 from datetime import datetime
 import RPi.GPIO as GPIO
@@ -15,23 +16,57 @@ class SMS:
         self.Receiver = ''
         self.Date = ''
 
+class GPS:
+    EarthRadius = 6371e3         # meters
+
+    @staticmethod
+    def CalculateDeltaP(Position1, Position2):
+        phi1 = Position1.Latitude * math.pi / 180.0
+        phi2 = Position2.Latitude * math.pi / 180.0
+        deltaPhi = (Position2.Latitude - Position1.Latitude) * math.pi / 180.0
+        deltaLambda = (Position2.Longitude - Position1.Longitude) * math.pi / 180.0
+
+        a = math.sin(deltaPhi / 2) * math.sin(deltaPhi / 2) + math.cos(phi1) * math.cos(phi2) * math.sin(deltaLambda / 2) * math.sin(deltaLambda / 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        d = GPS.EarthRadius * c    # in meters
+
+        return d
+
+    def __init__(self):
+        self.GNSS_status = 0
+        self.Fix_status = 0
+        self.UTC = ''           # yyyyMMddhhmmss.sss
+        self.Latitude = 0.0     # ±dd.dddddd            [-90.000000,90.000000]
+        self.Longitude = 0.0    # ±ddd.dddddd           [-180.000000,180.000000]
+        self.Altitude = 0.0     # in meters
+        self.Speed = 0.0        # km/h [0,999.99]
+        self.Course = 0.0       # degrees [0,360.00]
+        self.HDOP = 0.0         # [0,99.9]
+        self.PDOP = 0.0         # [0,99.9]
+        self.VDOP = 0.0         # [0,99.9]
+        self.GPS_satellites = 0 # [0,99]
+        self.GNSS_satellites = 0    # [0,99]
+        self.Signal = 0.0         # %      max = 55 dBHz
+
 class GSMHat:
     """GSM Hat Backend with SMS Functionality (for now)"""
     
     regexGetSingleValue = r'([+][a-zA-Z\ ]+(:\ ))([\d]+)'
-    regexGetAllValues = r'([+][a-zA-Z:\s]+)([\w\",\s+\/:]+)'
+    regexGetAllValues = r'([+][a-zA-Z:\s]+)([\w\",\s+\/:.]+)'
     timeoutSerial = 5
+    timeoutGPSActive = 1
+    timeoutGPSInactive = 5
 
     def __init__(self, SerialPort, Baudrate):
         self.__baudrate = Baudrate
         self.__port = SerialPort
 
         self.__logger = logging.getLogger(__name__)
-        self.__logger.setLevel(logging.DEBUG)
+        self.__logger.setLevel(logging.INFO)
         self.__loggerFileHandle = logging.FileHandler('gsmHat.log')
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.__loggerFileHandle.setFormatter(formatter)
-        self.__loggerFileHandle.setLevel(logging.DEBUG)
+        self.__loggerFileHandle.setLevel(logging.INFO )
         self.__logger.addHandler(self.__loggerFileHandle)
 
         self.__connect()
@@ -56,6 +91,16 @@ class GSMHat:
         self.__smsToBuild = None
         self.__smsList = []
         self.__smsSendList = []
+        self.__numberToCall = ''
+        self.__sendHangUp = False
+        self.__startGPS = False
+        self.__GPSstarted = False
+        self.__GPSstartSending = False
+        self.__GPSstopSending = False
+        self.__GPScollectData = False
+        self.__GPSactualData = GPS()
+        self.__GPStimeout = self.timeoutGPSInactive * 1000
+        self.__GPSwaittime = 0
         self.__workerThread = threading.Thread(target=self.__workerThread, daemon=True)
         self.__workerThread.start()
 
@@ -104,6 +149,35 @@ class GSMHat:
         newSMS.Receiver = NumberReceiver
         newSMS.Message = Message
         self.__smsSendList.append(newSMS)
+
+    def Call(self, Number, Timeout = 15):
+        if self.__numberToCall == '':
+            self.__numberToCall = str(Number)
+            self.__callTimeout = Timeout
+            return True
+
+        return False
+
+    def HangUp(self):
+        self.__sendHangUp = True
+
+    def GetActualGPS(self):
+        return self.__GPSactualData
+
+    def __startGPSUnit(self):
+        self.__startGPS = True
+    
+    def __startGPSsending(self):
+        self.__GPSstartSending = True
+
+    def __stopGPSsending(self):
+        self.__GPSstopSending = True
+    
+    def __collectGPSData(self):
+        self.__GPScollectData = True
+
+    def ColData(self):
+        self.__collectGPSData()
 
     def close(self):
         self.__disconnect()
@@ -171,6 +245,74 @@ class GSMHat:
                     numSMS = int(rawData[1])
                     self.__logger.debug('New SMS in memory ' + storage + ' at position ' + str(numSMS))
                     self.__smsToRead = numSMS
+                
+                # GPS Data coming here
+                elif '+CGNSINF:' in self.__serData:
+                    self.__logger.debug('New GPS Data:')
+                    match = re.findall(self.regexGetAllValues, self.__serData)
+                    rawData = match[0][1].split(',')
+                    
+                    newGPS = GPS()
+
+                    try:
+                        newGPS.GNSS_status = int(rawData[0])
+                    except:
+                        pass
+                    try:
+                        newGPS.Fix_status = int(rawData[1])
+                    except:
+                        pass
+                    try:
+                        newGPS.UTC = datetime.strptime(rawData[2][:-4], '%Y%m%d%H%M%S')
+                    except:
+                        pass
+                    try:
+                        newGPS.Latitude = float(rawData[3])
+                    except:
+                        pass
+                    try:
+                        newGPS.Longitude = float(rawData[4])
+                    except:
+                        pass
+                    try:
+                        newGPS.Altitude = float(rawData[5])
+                    except:
+                        pass
+                    try:
+                        newGPS.Speed = float(rawData[6])
+                    except:
+                        pass
+                    try:
+                        newGPS.Course = float(rawData[7])
+                    except:
+                        pass
+                    try:
+                        newGPS.HDOP = float(rawData[10])
+                    except:
+                        pass
+                    try:
+                        newGPS.PDOP = float(rawData[11])
+                    except:
+                        pass
+                    try:
+                        newGPS.VDOP = float(rawData[12])
+                    except:
+                        pass
+                    try:
+                        newGPS.GPS_satellites = int(rawData[14])
+                    except:
+                        pass
+                    try:
+                        newGPS.GNSS_satellites = int(rawData[15])
+                    except:
+                        pass
+                    try:
+                        newGPS.Signal = float(rawData[18])/55.0
+                    except:
+                        pass
+
+                    self.__GPSactualData = newGPS
+
 
             self.__serData = ''
 
@@ -222,6 +364,8 @@ class GSMHat:
             actTime = int(round(time.time() * 1000))
             if self.__state == 1:
                 if self.__sendToHat('AT+CMGF=1'):
+                    self.__startGPSUnit()
+                    self.__stopGPSsending()
                     self.__state = 2
             elif self.__state == 2:
                 if self.__waitForUnlock():
@@ -279,14 +423,105 @@ class GSMHat:
                     self.__nextState = 2
                     self.__waitTime = actTime + 5000
 
+            elif self.__state == 40:
+                if self.__sendToHat('ATD' + self.__numberToCall + ';'):
+                    self.__state = 41
+
+            elif self.__state == 41:
+                if self.__waitForUnlock():
+                    self.__waitTime = actTime + self.__callTimeout * 1000
+                    self.__state = 42
+
+            elif self.__state == 42:
+                    # Wait x Seconds
+                if actTime > self.__waitTime or self.__sendHangUp == True:
+                    self.__numberToCall = ''
+                    self.__sendHangUp = True
+                    self.__state = 97
+                    self.__nextState = 2
+                    self.__waitTime = actTime + 5000
+            
+            elif self.__state == 43:
+                if self.__sendToHat('AT+CHUP'):
+                    self.__state = 44
+
+            elif self.__state == 44:
+                if self.__waitForUnlock():
+                    self.__sendHangUp = False
+                    self.__state = 97
+                    self.__nextState = 2
+                    self.__waitTime = actTime + 5000
+
+            elif self.__state == 50:
+                if self.__sendToHat('AT+CGNSPWR=1'):
+                    self.__state = 51
+
+            elif self.__state == 51:
+                if self.__waitForUnlock():
+                    self.__logger.debug('GPS powered on')
+                    self.__startGPS = False
+                    self.__state = 97
+                    self.__nextState = 2
+                    self.__waitTime = actTime + 5000
+                
+            elif self.__state == 52:
+                if self.__sendToHat('AT+CGNSTST=1'):
+                    self.__state = 55
+                    self.__logger.debug('GPS start sending')
+                    self.__GPSstartSending = False
+
+            elif self.__state == 53:
+                if self.__sendToHat('AT+CGNSTST=0'):
+                    self.__state = 55
+                    self.__GPSstopSending = False
+
+            elif self.__state == 54:
+                if self.__sendToHat('AT+CGNSINF'):
+                    self.__state = 55
+                    self.__GPScollectData = False
+
+            elif self.__state == 55:
+                if self.__waitForUnlock():
+                    self.__state = 97
+                    self.__nextState = 2
+                    self.__waitTime = actTime + 5000
+
             elif self.__state == 97:
                 # Check if new SMS to send is there        
                 if len(self.__smsSendList) > 0:
                     self.__state = 30
+                
+                # Check if we have to Call somebody
+                elif self.__numberToCall != '':
+                    self.__state = 40
+
+                # Should I Hang Up ?
+                elif self.__sendHangUp:
+                    self.__state = 43
 
                 # Check if new SMS is there
                 elif self.__smsToRead > 0:
                     self.__state = 20
+
+                # Check if GPS Unit should start
+                elif self.__startGPS:
+                    self.__state = 50
+
+                # Check if GPS Unit should start send
+                elif self.__GPSstartSending:
+                    self.__state = 52
+
+                # Check if GPS Unit should stop send
+                elif self.__GPSstopSending:
+                    self.__state = 53
+
+                # Check if Single GPS Data should be collected
+                elif self.__GPScollectData:
+                    self.__state = 54
+
+                elif actTime > self.__GPSwaittime:
+                    self.__GPScollectData = True
+                    self.__GPSwaittime = actTime + self.__GPStimeout
 
                 # Wait x Seconds
                 elif actTime > self.__waitTime:
