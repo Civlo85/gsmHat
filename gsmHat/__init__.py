@@ -1,1 +1,1 @@
-from gsmHat.gsmHat import GSMHat, SMS
+from gsmHat.gsmHat import GSMHat, SMS, GPS
