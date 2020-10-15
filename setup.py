@@ -12,8 +12,7 @@ setup(
   keywords = ['Waveshare', 'GSM', 'GPS', 'Raspberry', 'Pi'],
   install_requires=[
           'serial',
-          'datetime',
-          'logging',
+          'datetime'
       ],
   classifiers=[
     'Development Status :: 3 - Alpha',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
