@@ -2,13 +2,13 @@ from distutils.core import setup
 setup(
   name = 'gsmHat',
   packages = ['gsmHat'],
-  version = '0.2',
+  version = '0.3',
   license='MIT',
   description = 'Using the Waveshare GSM/GPRS/GNSS Hat for Raspberry Pi with Python',
   author = 'Tarek Tounsi',
   author_email = 'software@tounsi.de',
   url = 'https://github.com/Civlo85/gsmHat',
-  download_url = 'https://github.com/Civlo85/gsmHat/archive/v_02.tar.gz',
+  download_url = 'https://github.com/Civlo85/gsmHat/archive/v_03.tar.gz',
   keywords = ['Waveshare', 'GSM', 'GPS', 'Raspberry', 'Pi'],
   install_requires=[
           'serial',
