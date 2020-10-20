@@ -1,10 +1,16 @@
-from distutils.core import setup
+from setuptools import setup
+
+with open('README.md') as f:
+    long_description = f.read()
+
 setup(
   name = 'gsmHat',
   packages = ['gsmHat'],
-  version = '0.4',
+  version = '0.4.2',
   license='MIT',
   description = 'Using the Waveshare GSM/GPRS/GNSS Hat for Raspberry Pi with Python',
+  long_description = long_description,
+  long_description_content_type="text/markdown",
   author = 'Tarek Tounsi',
   author_email = 'software@tounsi.de',
   url = 'https://github.com/Civlo85/gsmHat',
