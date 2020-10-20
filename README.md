@@ -1,6 +1,9 @@
 # gsmHat - Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi with Python
 
-With gsmHat, you can easily use the functionality of the Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi ([Link to HAT](https://www.waveshare.com/gsm-gprs-gnss-hat.htm)). On this module a SIM868 Controller is doing the job too connect your Raspberry Pi with the world just by using a sim card.
+With gsmHat, you can easily use the functionality of the Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi ([Link to HAT](https://www.waveshare.com/gsm-gprs-gnss-hat.htm)). On this module a SIM868 Controller is doing the job to connect your Raspberry Pi with the world just by using a sim card.
+
+## Update on Wed Oct 21st, 2020
+:point_right: Internet functionality added!
 
 ## Overview
 gsmHat was written for Python 3. It provides the following features
@@ -8,6 +11,7 @@ gsmHat was written for Python 3. It provides the following features
   - Non-blocking receiving and sending SMS in background
   - Non-blocking calling
   - Non-blocking refreshing of actual gps position
+  - Non-blocking URL Call and receiving of response
 
 ## Usage
 
@@ -88,7 +92,7 @@ gsm.HangUp()            # Or you can HangUp by yourself earlier
 gsm.Call(Number, 60)    # Or lets change the timeout to 60 seconds. This call hangs up automatically after 60 seconds
 ```
 
-7. Lets see, where your Raspberry Pi (in a car or in a motocycle or on a cat?) is positioned on earth
+7. Lets see, where your Raspberry Pi (in a car or on a motocycle or on a cat?) is positioned on earth
 
 ```Python
 # Get actual GPS position
@@ -114,16 +118,49 @@ print('Signal: %s' % str(GPSObj.Signal))
 8. Calculate the distance between two Points on earth
 
 ```Python
-    GPSObj1 = GPS()                 # You can also use gsm.GetActualGPS() to get an GPS object
-    GPSObj1.Latitude = 52.266949    # Location of Braunschweig, Germany
-    GPSObj1.Longitude = 10.524822
+GPSObj1 = GPS()                 # You can also use gsm.GetActualGPS() to get an GPS object
+GPSObj1.Latitude = 52.266949    # Location of Braunschweig, Germany
+GPSObj1.Longitude = 10.524822
 
-    GPSObj2 = GPS()
-    GPSObj2.Latitude = 36.720005    # Location of Manavgat, Turkey
-    GPSObj2.Longitude = 31.546094
+GPSObj2 = GPS()
+GPSObj2.Latitude = 36.720005    # Location of Manavgat, Turkey
+GPSObj2.Longitude = 31.546094
 
-    print('Distance from Braunschweig to Manavgat is [m]:')
-    print(GPS.CalculateDeltaP(GPSObj1, GPSObj2))        # this will print 2384660.7 metres
+print('Distance from Braunschweig to Manavgat in metres:')
+print(GPS.CalculateDeltaP(GPSObj1, GPSObj2))        # this will print 2384660.7 metres
+```
+
+9. Call URL to send some data
+
+```Python
+# Init gsmHat
+gsm = GSMHat('/dev/ttyS0', 115200)
+
+# Set the APN Connection data. You will get this from your provider
+# e.g. German Provider 'Congstar'
+gsm.SetGPRSconnection('internet.telekom', 'congstar', 'cs')
+
+# Get actual GPS position
+GPSObj = gsm.GetActualGPS()
+
+# Build url string with data
+url = 'www.someserver.de/myscript.php'
+url += '?time='+str(int(GPSObj.UTC.timestamp()))
+url += '&lat='+str(GPSObj.Latitude)
+url += '&lon='+str(GPSObj.Longitude)
+url += '&alt='+str(GPSObj.Altitude)
+
+gsm.CallUrl(url)    # Send actual position to a webserver
+```
+
+10. Get the Response from a previous URL call
+
+```Python
+# Check, if new Response Data is available
+if gsm.UrlResponse_available() > 0:
+    # Read the Response
+    newResponse = gsm.UrlResponse_read()
+    # Do something with it
 ```
 
 ## What will come in the future?
