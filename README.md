@@ -21,7 +21,7 @@ In the following paragraphs, I am going to describe how you can get and use gsmH
 
 To download gsmHat, either fork this github repo or simply use Pypi via pip.
 ```sh
-$ pip3 install gsmHat
+$ python3 -m pip install -U gsmHat
 ```
 
 ### Prepare
