@@ -344,7 +344,7 @@ class GSMHat:
                     self.__logger.debug('New GPS Data:')
                     match = re.findall(self.regexGetAllValues, self.__serData)
                     rawData = match[0][1].split(',')
-                    if len(rawData) == 21:                    
+                    if len(rawData) >= 21:                    
                         newGPS = GPS()
                         goodPosition = True
 
