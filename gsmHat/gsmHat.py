@@ -59,9 +59,10 @@ class GSMHat:
     cSMSwaittime = 2500             # milliseconds
     cGPRSstatusWaittime = 5000      # milliseconds
 
-    def __init__(self, SerialPort, Baudrate, Logpath='gmsHat.log'):
+    def __init__(self, SerialPort, Baudrate, PWRPin=7, Logpath='gmsHat.log'):
         self.__baudrate = Baudrate
         self.__port = SerialPort
+        self.__pwrpin = PWRPin
 
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.DEBUG)
@@ -140,11 +141,11 @@ class GSMHat:
     
     def __pressPowerKey(self):
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(7, GPIO.OUT)
+        GPIO.setup(self.__pwrpin, GPIO.OUT)
         while True:
-            GPIO.output(7, GPIO.LOW)
+            GPIO.output(self.__pwrpin, GPIO.LOW)
             time.sleep(4)
-            GPIO.output(7, GPIO.HIGH)
+            GPIO.output(self.__pwrpin, GPIO.HIGH)
             break
         GPIO.cleanup()
         time.sleep(10)
