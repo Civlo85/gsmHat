@@ -1,3 +1,6 @@
+# Update on Thu Apr 4th, 2024
+Unfortunately, there is no time (and equipment anymore) to maintain this repository. I hope that someone else will find the time to continue with that.
+
 # gsmHat - Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi with Python
 
 With gsmHat, you can easily use the functionality of the Waveshare GSM/GPRS/GNSS HAT for Raspberry Pi ([Link to HAT](https://www.waveshare.com/gsm-gprs-gnss-hat.htm)). On this module a SIM868 Controller is doing the job to connect your Raspberry Pi with the world just by using a sim card.
